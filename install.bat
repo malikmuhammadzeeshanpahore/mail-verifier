@@ -1,7 +1,7 @@
 @echo off
 
-node -v >nul 2>&1
-IF %ERRORLEVEL% NEQ 0 (
+where node >nul 2>nul
+if errorlevel 1 (
     echo Node.js is not installed. Downloading Node.js 18 installer...
     powershell -Command "Invoke-WebRequest -Uri 'https://nodejs.org/dist/v18.17.1/node-v18.17.1-x64.msi' -OutFile 'nodejs_installer.msi'"
     echo Running Node.js installer... Please follow the setup prompts to install Node.js.
