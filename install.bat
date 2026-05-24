@@ -25,16 +25,16 @@ call npm install -g pkg
 
 :PKG_INSTALLED
 echo Building executables for Windows...
-call npx pkg sender.js -t node18-win-x64 -o sender.exe
-call npx pkg verifier.js -t node18-win-x64 -o verifier.exe
+call pkg sender.js -t node18-win-x64 -o sender.exe
+call pkg verifier.js -t node18-win-x64 -o verifier.exe
 
 set DESKTOP=%USERPROFILE%\Desktop
 set DATADIR=%DESKTOP%\verifier-data
 
 echo Setting up Desktop files...
 if not exist "%DATADIR%" mkdir "%DATADIR%"
-move sender.exe "%DESKTOP%\sender.exe"
-move verifier.exe "%DESKTOP%\verifier.exe"
+move /y sender.exe "%DESKTOP%\sender.exe"
+move /y verifier.exe "%DESKTOP%\verifier.exe"
 
 copy config.json "%DATADIR%\" >nul 2>&1
 copy subject.txt "%DATADIR%\" >nul 2>&1

@@ -30,8 +30,8 @@ then
 fi
 
 echo "Building executables for Linux..."
-npx pkg sender.js -t node18-linux-x64 -o sender
-npx pkg verifier.js -t node18-linux-x64 -o verifier
+pkg sender.js -t node18-linux-x64 -o sender
+pkg verifier.js -t node18-linux-x64 -o verifier
 
 DESKTOP=$HOME/Desktop
 DATADIR=$DESKTOP/verifier-data
@@ -39,8 +39,8 @@ DATADIR=$DESKTOP/verifier-data
 echo "Setting up Desktop files..."
 mkdir -p "$DATADIR"
 
-mv sender "$DESKTOP/sender"
-mv verifier "$DESKTOP/verifier"
+mv -f sender "$DESKTOP/sender"
+mv -f verifier "$DESKTOP/verifier"
 chmod +x "$DESKTOP/sender" "$DESKTOP/verifier"
 
 # Copy default configs if they exist
