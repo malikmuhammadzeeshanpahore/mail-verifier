@@ -1,0 +1,12 @@
+node_modules/
+config.json
+subject.txt
+template.txt
+sent.csv
+bounced.csv
+test_single.js
+*.log
+verifier.exe
+sender.exe
+verifier
+sender
