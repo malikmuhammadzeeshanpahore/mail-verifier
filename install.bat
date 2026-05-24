@@ -17,7 +17,7 @@ echo Node.js is detected!
 echo Installing project dependencies...
 call npm install --silent --no-audit --no-fund
 
-pkg --version >nul 2>&1
+where pkg >nul 2>nul
 IF %ERRORLEVEL% EQU 0 GOTO :PKG_INSTALLED
 
 echo Installing pkg bundler...
