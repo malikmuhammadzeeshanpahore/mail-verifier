@@ -20,9 +20,14 @@ then
     echo "Node.js installed successfully."
 fi
 
-echo "Installing dependencies..."
-npm install
-sudo npm install -g pkg || npm install -g pkg
+echo "Installing project dependencies..."
+npm install --silent --no-audit --no-fund
+
+if ! command -v pkg &> /dev/null
+then
+    echo "Installing pkg bundler..."
+    npm install -g pkg || sudo npm install -g pkg
+fi
 
 echo "Building executables for Linux..."
 npx pkg sender.js -t node18-linux-x64 -o sender

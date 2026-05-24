@@ -16,9 +16,14 @@ IF %ERRORLEVEL% NEQ 0 (
     exit /b
 )
 
-echo Installing dependencies...
-call npm install
-call npm install -g pkg
+echo Installing project dependencies...
+call npm install --silent --no-audit --no-fund
+
+pkg --version >nul 2>&1
+IF %ERRORLEVEL% NEQ 0 (
+    echo Installing pkg bundler...
+    call npm install -g pkg
+)
 
 echo Building executables for Windows...
 call npx pkg sender.js -t node18-win-x64 -o sender.exe
