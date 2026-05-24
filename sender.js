@@ -202,43 +202,82 @@ function keepOpenAndExit(code = 1) {
     });
 }
 
-if (!fs.existsSync(CONFIG_FILE)) {
-    console.error(`config.json not found! Looking at: ${CONFIG_FILE}`);
-    keepOpenAndExit(1);
-} else {
-    try {
-        const config = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
-        
-        rl.question('Enter the path to your input Excel/CSV file (e.g. mails.xlsx): ', (excelPath) => {
-            excelPath = excelPath.trim();
-            
-            // If it's just a filename, assume it's in the data folder
-            if (path.basename(excelPath) === excelPath) {
-                excelPath = path.join(dataDir, excelPath);
-            }
-            
-            if (!fs.existsSync(excelPath)) {
-                console.error("File not found: " + excelPath);
-                rl.close();
-                keepOpenAndExit(1);
-                return;
-            }
-            
-            try {
-                const sender = new Sender(config, excelPath);
-                rl.close();
-                sender.run().catch(err => {
-                    console.error(err);
-                    keepOpenAndExit(1);
-                });
-            } catch (err) {
-                console.error("Error starting sender:", err.message);
-                rl.close();
-                keepOpenAndExit(1);
-            }
-        });
-    } catch (e) {
-        console.error("Failed to parse config.json:", e.message);
-        keepOpenAndExit(1);
+const askQuestion = (query) => new Promise(resolve => rl.question(query, resolve));
+
+async function promptForConfig() {
+    console.log("\n--- Initial Setup ---");
+    console.log("config.json not found. Please provide your email server details to generate it.\n");
+    
+    const smtp_server = await askQuestion("SMTP Server (default: smtp.hostinger.com): ");
+    const smtp_port = await askQuestion("SMTP Port (default: 465): ");
+    const imap_server = await askQuestion("IMAP Server (default: imap.hostinger.com): ");
+    const imap_port = await askQuestion("IMAP Port (default: 993): ");
+    const email_address = await askQuestion("Email Address: ");
+    const password = await askQuestion("Email Password: ");
+    
+    const config = {
+        smtp_server: smtp_server.trim() || "smtp.hostinger.com",
+        smtp_port: parseInt(smtp_port.trim()) || 465,
+        imap_server: imap_server.trim() || "imap.hostinger.com",
+        imap_port: parseInt(imap_port.trim()) || 993,
+        email_address: email_address.trim(),
+        password: password.trim()
+    };
+    
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 4));
+    console.log(`\nConfiguration saved to ${CONFIG_FILE}`);
+    
+    if (!fs.existsSync(SUBJECT_FILE)) {
+        fs.writeFileSync(SUBJECT_FILE, "Subject goes here...");
+        console.log(`Created default subject.txt`);
     }
+    if (!fs.existsSync(TEMPLATE_FILE)) {
+        fs.writeFileSync(TEMPLATE_FILE, "Hi,\n\nYour message goes here.\n");
+        console.log(`Created default template.txt`);
+    }
+    console.log("\nSetup complete!\n");
+    
+    return config;
 }
+
+(async () => {
+    let config;
+    if (!fs.existsSync(CONFIG_FILE)) {
+        config = await promptForConfig();
+    } else {
+        try {
+            config = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+        } catch (e) {
+            console.error("Failed to parse config.json:", e.message);
+            return keepOpenAndExit(1);
+        }
+    }
+    
+    rl.question('Enter the path to your input Excel/CSV file (e.g. mails.xlsx): ', (excelPath) => {
+        excelPath = excelPath.trim();
+        
+        // If it's just a filename, assume it's in the data folder
+        if (path.basename(excelPath) === excelPath) {
+            excelPath = path.join(dataDir, excelPath);
+        }
+        
+        if (!fs.existsSync(excelPath)) {
+            console.error("File not found: " + excelPath);
+            rl.close();
+            return keepOpenAndExit(1);
+        }
+        
+        try {
+            const sender = new Sender(config, excelPath);
+            rl.close();
+            sender.run().catch(err => {
+                console.error(err);
+                keepOpenAndExit(1);
+            });
+        } catch (err) {
+            console.error("Error starting sender:", err.message);
+            rl.close();
+            keepOpenAndExit(1);
+        }
+    });
+})();
