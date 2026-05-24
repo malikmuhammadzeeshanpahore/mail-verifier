@@ -10,3 +10,6 @@ verifier.exe
 sender.exe
 verifier
 sender
+*.xlsx
+*.csv
+real-estate.xlsx
