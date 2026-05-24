@@ -191,26 +191,54 @@ class Sender {
     }
 }
 
-if (!fs.existsSync(CONFIG_FILE)) {
-    console.error("config.json not found!");
-    process.exit(1);
+function keepOpenAndExit(code = 1) {
+    const readline = require('readline');
+    const rlExit = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+    rlExit.question('\nPress Enter to exit...', () => {
+        process.exit(code);
+    });
 }
-const config = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
 
-rl.question('Enter the path to your input Excel/CSV file (e.g. mails.xlsx): ', (excelPath) => {
-    excelPath = excelPath.trim();
-    
-    // If it's just a filename, assume it's in the data folder
-    if (path.basename(excelPath) === excelPath) {
-        excelPath = path.join(dataDir, excelPath);
+if (!fs.existsSync(CONFIG_FILE)) {
+    console.error(`config.json not found! Looking at: ${CONFIG_FILE}`);
+    keepOpenAndExit(1);
+} else {
+    try {
+        const config = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+        
+        rl.question('Enter the path to your input Excel/CSV file (e.g. mails.xlsx): ', (excelPath) => {
+            excelPath = excelPath.trim();
+            
+            // If it's just a filename, assume it's in the data folder
+            if (path.basename(excelPath) === excelPath) {
+                excelPath = path.join(dataDir, excelPath);
+            }
+            
+            if (!fs.existsSync(excelPath)) {
+                console.error("File not found: " + excelPath);
+                rl.close();
+                keepOpenAndExit(1);
+                return;
+            }
+            
+            try {
+                const sender = new Sender(config, excelPath);
+                rl.close();
+                sender.run().catch(err => {
+                    console.error(err);
+                    keepOpenAndExit(1);
+                });
+            } catch (err) {
+                console.error("Error starting sender:", err.message);
+                rl.close();
+                keepOpenAndExit(1);
+            }
+        });
+    } catch (e) {
+        console.error("Failed to parse config.json:", e.message);
+        keepOpenAndExit(1);
     }
-    
-    if (!fs.existsSync(excelPath)) {
-        console.error("File not found: " + excelPath);
-        process.exit(1);
-    }
-    
-    const sender = new Sender(config, excelPath);
-    sender.run().catch(console.error);
-    rl.close();
-});
+}

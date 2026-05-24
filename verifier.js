@@ -232,11 +232,30 @@ class Verifier {
     }
 }
 
-if (!fs.existsSync(CONFIG_FILE)) {
-    console.error("config.json not found!");
-    process.exit(1);
+function keepOpenAndExit(code = 1) {
+    const readline = require('readline');
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+    rl.question('\nPress Enter to exit...', () => {
+        process.exit(code);
+    });
 }
-const config = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
 
-const verifier = new Verifier(config);
-verifier.run().catch(console.error);
+if (!fs.existsSync(CONFIG_FILE)) {
+    console.error(`config.json not found! Looking at: ${CONFIG_FILE}`);
+    keepOpenAndExit(1);
+} else {
+    try {
+        const config = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+        const verifier = new Verifier(config);
+        verifier.run().catch(err => {
+            console.error(err);
+            keepOpenAndExit(1);
+        });
+    } catch (e) {
+        console.error("Failed to parse config.json or start verifier:", e.message);
+        keepOpenAndExit(1);
+    }
+}
